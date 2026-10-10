@@ -4871,6 +4871,7 @@ var MobileKeyboard = (function () {
         this._Input.style.color = 'transparent';
         this._Input.style.pointerEvents = 'none';
         this._Input.style.zIndex = '0';
+        this._Input.style.fontSize = '16px';
         this._Input.style.resize = 'none';
         this._Input.style.overflow = 'hidden';
         this._Input.style.whiteSpace = 'nowrap';
