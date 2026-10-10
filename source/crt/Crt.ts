@@ -1378,6 +1378,19 @@ class Crt {
         });
     }
 
+    public PushKeyString(keyString: string): void {
+        if (!keyString) { return; }
+        this._KeyBuf.push(new KeyPressEvent(<KeyboardEvent>{
+            altKey: false,
+            charCode: 0,
+            ctrlKey: false,
+            keyCode: 0,
+            shiftKey: false,
+            preventDefault: function (): void { /* do nothing */ }
+        }, keyString));
+        this.onkeypressed.trigger();
+    }
+
     public ReadKey(): KeyPressEvent | undefined {
         var KPE = this._KeyBuf.shift();
         if (typeof KPE === 'undefined') {

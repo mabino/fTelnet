@@ -1,3 +1,4 @@
+/// <reference path="./MobileKeyboard.ts" />
 /*
   fTelnet: An HTML5 WebSocket client
   Copyright (C) Rick Parrish, R&M Software
@@ -36,6 +37,7 @@ class fTelnetClient {
     private _LoadingProxySettings: number = 0;
     private _MenuButton: HTMLAnchorElement;
     private _MenuButtons: HTMLDivElement;
+    private _MobileKeyboard: MobileKeyboard;
     private _RIP: RIP;
     private _ScrollbackBar: HTMLDivElement;
     private _StatusBar: HTMLDivElement;
@@ -368,7 +370,16 @@ class fTelnetClient {
             var MenuButtonsKeyboard: HTMLAnchorElement = document.createElement('a');
             MenuButtonsKeyboard.href = '#';
             MenuButtonsKeyboard.innerHTML = 'Keyboard';
-            MenuButtonsKeyboard.addEventListener('click', (me: MouseEvent): boolean => { this.VirtualKeyboardVisible = !this.VirtualKeyboardVisible; me.preventDefault(); return false; });
+            MenuButtonsKeyboard.addEventListener('click', (me: MouseEvent): boolean => {
+                if (this._Options.UseNativeKeyboard) {
+                    this._MobileKeyboard.Toggle();
+                    this.OnMenuButtonClick(null);
+                } else {
+                    this.VirtualKeyboardVisible = !this.VirtualKeyboardVisible;
+                }
+                me.preventDefault();
+                return false;
+            });
             MenuButtonsRow4Cell1.appendChild(MenuButtonsKeyboard);
             MenuButtonsRow4.appendChild(MenuButtonsRow4Cell1);
             var MenuButtonsRow4Cell2: HTMLTableCellElement = document.createElement('td');
@@ -447,6 +458,9 @@ class fTelnetClient {
         this._VirtualKeyboard = new VirtualKeyboard(this._Crt, this._fTelnetContainer);
         this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
         this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
+
+        // Create the mobile native keyboard helper and accessory bar
+        this._MobileKeyboard = new MobileKeyboard(this._Crt, this._fTelnetContainer, this._Options);
 
         // Size the scrollback and button divs
         this.OnCrtScreenSizeChanged();
@@ -1008,6 +1022,7 @@ class fTelnetClient {
         if (typeof this._FocusWarningBar !== 'undefined') { this._FocusWarningBar.style.width = NewWidth - 10 + 'px'; }
         if (typeof this._ScrollbackBar !== 'undefined') { this._ScrollbackBar.style.width = NewWidth - 10 + 'px'; }
         if (typeof this._StatusBar !== 'undefined') { this._StatusBar.style.width = NewWidth - 10 + 'px'; }
+        if (typeof this._MobileKeyboard !== 'undefined') { this._MobileKeyboard.SetWidth(NewWidth); }
 
         // Pick virtual keyboard width
         if ((document.getElementById('fTelnetScript') !== null) && (document.getElementById('fTelnetKeyboardCss') !== null)) {
@@ -1146,5 +1161,28 @@ class fTelnetClient {
 
         this._Options.VirtualKeyboardVisible = value;
         this._VirtualKeyboard.Visible = value;
+    }
+
+    public get MobileKeyboard(): MobileKeyboard {
+        return this._MobileKeyboard;
+    }
+
+    public get UseNativeKeyboard(): boolean {
+        return this._Options.UseNativeKeyboard;
+    }
+
+    public set UseNativeKeyboard(value: boolean) {
+        this._Options.UseNativeKeyboard = value;
+    }
+
+    public get NativeKeyboardAccessoryBar(): boolean {
+        return this._Options.NativeKeyboardAccessoryBar;
+    }
+
+    public set NativeKeyboardAccessoryBar(value: boolean) {
+        this._Options.NativeKeyboardAccessoryBar = value;
+        if (typeof this._MobileKeyboard !== 'undefined') {
+            this._MobileKeyboard.AccessoryBarEnabled = value;
+        }
     }
 }

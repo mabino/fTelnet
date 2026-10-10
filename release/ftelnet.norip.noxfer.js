@@ -370,7 +370,8 @@ var DetectMobileBrowser = (function () {
             }
             if (typeof this._IsMobile === 'undefined') {
                 var a = navigator.userAgent || navigator.vendor;
-                this._IsMobile = (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4)));
+                var isIPad = (typeof navigator.platform === 'string' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                this._IsMobile = isIPad || (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4)));
             }
             return this._IsMobile;
         },
@@ -2502,6 +2503,20 @@ var Crt = (function () {
             shiftKey: shift,
             preventDefault: function () { }
         });
+    };
+    Crt.prototype.PushKeyString = function (keyString) {
+        if (!keyString) {
+            return;
+        }
+        this._KeyBuf.push(new KeyPressEvent({
+            altKey: false,
+            charCode: 0,
+            ctrlKey: false,
+            keyCode: 0,
+            shiftKey: false,
+            preventDefault: function () { }
+        }, keyString));
+        this.onkeypressed.trigger();
     };
     Crt.prototype.ReadKey = function () {
         var KPE = this._KeyBuf.shift();
@@ -4808,6 +4823,529 @@ var TelnetOption;
     TelnetOption[TelnetOption["FORWARD_X"] = 49] = "FORWARD_X";
 })(TelnetOption || (TelnetOption = {}));
 //# sourceMappingURL=connections.js.map
+var MobileKeyboard = (function () {
+    function MobileKeyboard(crt, container, options) {
+        this._CtrlLatched = false;
+        this._AltLatched = false;
+        this._FunctionRowVisible = false;
+        this._IsFocused = false;
+        this._AccessoryBarEnabled = true;
+        this._TouchStartX = 0;
+        this._TouchStartY = 0;
+        this._TouchStartTime = 0;
+        this._IsDragging = false;
+        this._LastInputType = '';
+        this._LastInputTime = 0;
+        this._Crt = crt;
+        this._Container = container;
+        this._Options = options;
+        this._AccessoryBarEnabled = options.NativeKeyboardAccessoryBar;
+        this.CreateHelperInput();
+        this.CreateAccessoryBar();
+        this.AttachCanvasListeners();
+    }
+    MobileKeyboard.prototype.CreateHelperInput = function () {
+        var _this = this;
+        this._Input = document.createElement('textarea');
+        this._Input.id = 'fTelnetMobileInput';
+        this._Input.className = 'fTelnetMobileInput';
+        this._Input.setAttribute('autocomplete', 'off');
+        this._Input.setAttribute('autocorrect', 'off');
+        this._Input.setAttribute('autocapitalize', 'none');
+        this._Input.setAttribute('spellcheck', 'false');
+        this._Input.setAttribute('tabindex', '-1');
+        this._Input.setAttribute('aria-hidden', 'true');
+        this._Input.setAttribute('rows', '1');
+        this._Input.setAttribute('cols', '1');
+        this._Input.style.position = 'absolute';
+        this._Input.style.left = '0';
+        this._Input.style.top = '0';
+        this._Input.style.width = '1px';
+        this._Input.style.height = '1px';
+        this._Input.style.padding = '0';
+        this._Input.style.margin = '0';
+        this._Input.style.border = 'none';
+        this._Input.style.outline = 'none';
+        this._Input.style.opacity = '0';
+        this._Input.style.background = 'transparent';
+        this._Input.style.color = 'transparent';
+        this._Input.style.pointerEvents = 'none';
+        this._Input.style.zIndex = '0';
+        this._Input.style.resize = 'none';
+        this._Input.style.overflow = 'hidden';
+        this._Input.style.whiteSpace = 'nowrap';
+        this._Input.addEventListener('keydown', function (ke) {
+            _this.OnInputKeyDown(ke);
+        }, false);
+        this._Input.addEventListener('beforeinput', function (e) {
+            _this.OnInputBeforeInput(e);
+        }, false);
+        this._Input.addEventListener('input', function () {
+            if (_this._Input.value.length > 0) {
+                _this.ProcessText(_this._Input.value);
+                _this._Input.value = '';
+            }
+        }, false);
+        this._Input.addEventListener('compositionend', function (e) {
+            if (e.data && e.data.length > 0) {
+                _this.ProcessText(e.data);
+                _this._Input.value = '';
+            }
+        }, false);
+        this._Input.addEventListener('focus', function () {
+            _this._IsFocused = true;
+            if (_this._AccessoryBarEnabled && _this._AccessoryBar) {
+                _this._AccessoryBar.style.display = 'block';
+            }
+        }, false);
+        this._Input.addEventListener('blur', function () {
+            _this._IsFocused = false;
+            if (_this._AccessoryBar) {
+                _this._AccessoryBar.style.display = 'none';
+            }
+            _this.ClearModifiers();
+        }, false);
+        this._Container.appendChild(this._Input);
+    };
+    MobileKeyboard.prototype.CreateAccessoryBar = function () {
+        var _this = this;
+        this._AccessoryBar = document.createElement('div');
+        this._AccessoryBar.className = 'fTelnetAccessoryBar';
+        this._AccessoryBar.style.display = 'none';
+        this._AccessoryBar.style.boxSizing = 'border-box';
+        this._AccessoryBar.style.backgroundColor = '#1a1a1a';
+        this._AccessoryBar.style.border = '1px solid #333333';
+        this._AccessoryBar.style.borderRadius = '4px';
+        this._AccessoryBar.style.padding = '4px';
+        this._AccessoryBar.style.margin = '4px auto';
+        this._AccessoryBar.style.userSelect = 'none';
+        this._AccessoryBar.style.webkitUserSelect = 'none';
+        this._AccessoryBar.style.touchAction = 'manipulation';
+        this._PrimaryRow = document.createElement('div');
+        this._PrimaryRow.className = 'fTelnetAccessoryRow';
+        this._PrimaryRow.style.display = 'flex';
+        this._PrimaryRow.style.flexWrap = 'nowrap';
+        this._PrimaryRow.style.justifyContent = 'space-between';
+        this._PrimaryRow.style.alignItems = 'center';
+        this._PrimaryRow.style.gap = '4px';
+        this._PrimaryRow.style.width = '100%';
+        this.AddButton(this._PrimaryRow, 'Esc', function () {
+            _this.SendKey(KeyboardKeys.ESCAPE);
+        });
+        this.AddButton(this._PrimaryRow, 'Tab', function () {
+            _this.SendKey(KeyboardKeys.TAB);
+        });
+        this._CtrlButton = this.AddButton(this._PrimaryRow, 'Ctrl', function () {
+            _this._CtrlLatched = !_this._CtrlLatched;
+            _this.UpdateModifierHighlight();
+        });
+        this._AltButton = this.AddButton(this._PrimaryRow, 'Alt', function () {
+            _this._AltLatched = !_this._AltLatched;
+            _this.UpdateModifierHighlight();
+        });
+        this.AddButton(this._PrimaryRow, '▲', function () {
+            _this.SendKey(KeyboardKeys.UP);
+        });
+        this.AddButton(this._PrimaryRow, '▼', function () {
+            _this.SendKey(KeyboardKeys.DOWN);
+        });
+        this.AddButton(this._PrimaryRow, '◄', function () {
+            _this.SendKey(KeyboardKeys.LEFT);
+        });
+        this.AddButton(this._PrimaryRow, '►', function () {
+            _this.SendKey(KeyboardKeys.RIGHT);
+        });
+        this._FnButton = this.AddButton(this._PrimaryRow, 'Fn', function () {
+            _this._FunctionRowVisible = !_this._FunctionRowVisible;
+            _this._FunctionRow.style.display = _this._FunctionRowVisible ? 'flex' : 'none';
+            _this.UpdateModifierHighlight();
+        }, 'fTelnetAccessoryKeyFn');
+        this.AddButton(this._PrimaryRow, '⌨ ▾', function () {
+            _this.Blur();
+        }, 'fTelnetAccessoryKeyDismiss');
+        this._AccessoryBar.appendChild(this._PrimaryRow);
+        this._FunctionRow = document.createElement('div');
+        this._FunctionRow.className = 'fTelnetAccessoryRow';
+        this._FunctionRow.style.display = 'none';
+        this._FunctionRow.style.flexWrap = 'nowrap';
+        this._FunctionRow.style.justifyContent = 'space-between';
+        this._FunctionRow.style.alignItems = 'center';
+        this._FunctionRow.style.gap = '3px';
+        this._FunctionRow.style.width = '100%';
+        this._FunctionRow.style.marginTop = '4px';
+        var fKeys = [
+            { label: 'F1', key: KeyboardKeys.F1 },
+            { label: 'F2', key: KeyboardKeys.F2 },
+            { label: 'F3', key: KeyboardKeys.F3 },
+            { label: 'F4', key: KeyboardKeys.F4 },
+            { label: 'F5', key: KeyboardKeys.F5 },
+            { label: 'F6', key: KeyboardKeys.F6 },
+            { label: 'F7', key: KeyboardKeys.F7 },
+            { label: 'F8', key: KeyboardKeys.F8 },
+            { label: 'F9', key: KeyboardKeys.F9 },
+            { label: 'F10', key: KeyboardKeys.F10 },
+            { label: 'PgUp', key: KeyboardKeys.PAGE_UP },
+            { label: 'PgDn', key: KeyboardKeys.PAGE_DOWN },
+            { label: 'Home', key: KeyboardKeys.HOME },
+            { label: 'End', key: KeyboardKeys.END }
+        ];
+        for (var i = 0; i < fKeys.length; i++) {
+            (function () {
+                var keyDef = fKeys[i];
+                _this.AddButton(_this._FunctionRow, keyDef.label, function () {
+                    _this.SendKey(keyDef.key);
+                });
+            })();
+        }
+        this._AccessoryBar.appendChild(this._FunctionRow);
+        this._Container.appendChild(this._AccessoryBar);
+    };
+    MobileKeyboard.prototype.AddButton = function (row, label, action, extraClass) {
+        var _this = this;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerHTML = label;
+        btn.className = 'fTelnetAccessoryKey' + (extraClass ? (' ' + extraClass) : '');
+        btn.style.flex = '1 1 0';
+        btn.style.minWidth = '0';
+        btn.style.height = '36px';
+        btn.style.lineHeight = '36px';
+        btn.style.margin = '0';
+        btn.style.padding = '0';
+        btn.style.fontSize = '13px';
+        btn.style.fontWeight = '500';
+        btn.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace';
+        btn.style.backgroundColor = '#2e2e2e';
+        btn.style.color = '#e0e0e0';
+        btn.style.border = '1px solid #4a4a4a';
+        btn.style.borderRadius = '4px';
+        btn.style.cursor = 'pointer';
+        btn.style.textAlign = 'center';
+        btn.style.touchAction = 'manipulation';
+        btn.style.webkitTapHighlightColor = 'transparent';
+        var wasHandledByTouch = false;
+        var executeAction = function () {
+            _this.TriggerVibrate();
+            action();
+        };
+        btn.addEventListener('touchstart', function (e) {
+            e.preventDefault();
+            wasHandledByTouch = true;
+            executeAction();
+        }, false);
+        btn.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            if (!wasHandledByTouch) {
+                executeAction();
+            }
+        }, false);
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (wasHandledByTouch) {
+                wasHandledByTouch = false;
+            }
+        }, false);
+        row.appendChild(btn);
+        return btn;
+    };
+    MobileKeyboard.prototype.AttachCanvasListeners = function () {
+        var _this = this;
+        var canvas = this._Crt.Canvas;
+        if (!canvas) {
+            return;
+        }
+        canvas.addEventListener('touchstart', function (e) {
+            if (!_this._Options.UseNativeKeyboard) {
+                return;
+            }
+            if (e.touches.length === 1) {
+                _this._TouchStartX = e.touches[0].clientX;
+                _this._TouchStartY = e.touches[0].clientY;
+                _this._TouchStartTime = Date.now();
+                _this._IsDragging = false;
+            }
+        }, { passive: true });
+        canvas.addEventListener('touchmove', function (e) {
+            if (e.touches.length === 1) {
+                var dx = Math.abs(e.touches[0].clientX - _this._TouchStartX);
+                var dy = Math.abs(e.touches[0].clientY - _this._TouchStartY);
+                if (dx > 10 || dy > 10) {
+                    _this._IsDragging = true;
+                }
+            }
+        }, { passive: true });
+        canvas.addEventListener('touchend', function (e) {
+            if (!_this._Options.UseNativeKeyboard) {
+                return;
+            }
+            if (!_this._IsDragging && (Date.now() - _this._TouchStartTime) < 500) {
+                _this.Focus();
+            }
+        }, false);
+        canvas.addEventListener('click', function () {
+            if (!_this._Options.UseNativeKeyboard) {
+                return;
+            }
+            if (DetectMobileBrowser.IsMobile) {
+                _this.Focus();
+            }
+        }, false);
+    };
+    MobileKeyboard.prototype.OnInputKeyDown = function (ke) {
+        var keyCode = ke.keyCode;
+        if (keyCode === KeyboardKeys.ENTER) {
+            ke.preventDefault();
+            this._Crt.PushKeyDown(0, KeyboardKeys.ENTER, this._CtrlLatched, this._AltLatched, ke.shiftKey);
+            this.ClearModifiers();
+            this._Input.value = '';
+            this._LastInputType = 'enter';
+            this._LastInputTime = Date.now();
+            return;
+        }
+        if (keyCode === KeyboardKeys.BACKSPACE) {
+            ke.preventDefault();
+            this._Crt.PushKeyDown(0, KeyboardKeys.BACKSPACE, this._CtrlLatched, this._AltLatched, ke.shiftKey);
+            this.ClearModifiers();
+            this._Input.value = '';
+            this._LastInputType = 'backspace';
+            this._LastInputTime = Date.now();
+            return;
+        }
+        if (keyCode === KeyboardKeys.TAB) {
+            ke.preventDefault();
+            this._Crt.PushKeyDown(0, KeyboardKeys.TAB, this._CtrlLatched, this._AltLatched, ke.shiftKey);
+            this.ClearModifiers();
+            this._Input.value = '';
+            return;
+        }
+        if (keyCode === KeyboardKeys.ESCAPE) {
+            ke.preventDefault();
+            this._Crt.PushKeyDown(0, KeyboardKeys.ESCAPE, this._CtrlLatched, this._AltLatched, ke.shiftKey);
+            this.ClearModifiers();
+            this._Input.value = '';
+            return;
+        }
+        if (keyCode === KeyboardKeys.UP || keyCode === KeyboardKeys.DOWN ||
+            keyCode === KeyboardKeys.LEFT || keyCode === KeyboardKeys.RIGHT) {
+            ke.preventDefault();
+            this._Crt.PushKeyDown(0, keyCode, this._CtrlLatched, this._AltLatched, ke.shiftKey);
+            this.ClearModifiers();
+            return;
+        }
+        if ((ke.ctrlKey || this._CtrlLatched || ke.altKey || this._AltLatched) && ke.key && ke.key.length === 1 && keyCode !== 229) {
+            ke.preventDefault();
+            this.ProcessText(ke.key);
+            this._Input.value = '';
+            return;
+        }
+    };
+    MobileKeyboard.prototype.OnInputBeforeInput = function (e) {
+        var inputType = e.inputType || '';
+        if (inputType === 'insertLineBreak' || inputType === 'insertParagraph') {
+            e.preventDefault();
+            if (!(this._LastInputType === 'enter' && (Date.now() - this._LastInputTime) < 60)) {
+                this._Crt.PushKeyDown(0, KeyboardKeys.ENTER, this._CtrlLatched, this._AltLatched, false);
+                this.ClearModifiers();
+            }
+            this._Input.value = '';
+            this._LastInputType = 'enter';
+            this._LastInputTime = Date.now();
+            return;
+        }
+        if (inputType === 'deleteContentBackward' || inputType === 'deleteContentForward') {
+            e.preventDefault();
+            if (!(this._LastInputType === 'backspace' && (Date.now() - this._LastInputTime) < 60)) {
+                this._Crt.PushKeyDown(0, KeyboardKeys.BACKSPACE, this._CtrlLatched, this._AltLatched, false);
+                this.ClearModifiers();
+            }
+            this._Input.value = '';
+            this._LastInputType = 'backspace';
+            this._LastInputTime = Date.now();
+            return;
+        }
+        if (inputType === 'insertText') {
+            e.preventDefault();
+            if (typeof e.data === 'string' && e.data.length > 0) {
+                this.ProcessText(e.data);
+            }
+            this._Input.value = '';
+            return;
+        }
+    };
+    MobileKeyboard.prototype.ProcessText = function (text) {
+        for (var i = 0; i < text.length; i++) {
+            var ch = text.charAt(i);
+            var code = text.charCodeAt(i);
+            if (this._CtrlLatched) {
+                this._CtrlLatched = false;
+                this.UpdateModifierHighlight();
+                if ((code >= 65) && (code <= 90)) {
+                    this._Crt.PushKeyString(String.fromCharCode(code - 64));
+                }
+                else if ((code >= 97) && (code <= 122)) {
+                    this._Crt.PushKeyString(String.fromCharCode(code - 96));
+                }
+                else {
+                    this._Crt.PushKeyString(ch);
+                }
+            }
+            else if (this._AltLatched) {
+                this._AltLatched = false;
+                this.UpdateModifierHighlight();
+                this._Crt.PushKeyString('\x1B' + ch);
+            }
+            else if (ch === '\r' || ch === '\n') {
+                this._Crt.PushKeyDown(0, KeyboardKeys.ENTER, false, false, false);
+            }
+            else if (ch === ' ') {
+                this._Crt.PushKeyDown(0, KeyboardKeys.SPACE, false, false, false);
+            }
+            else if (code >= 32) {
+                this._Crt.PushKeyPress(code, 0, false, false, false);
+            }
+        }
+    };
+    MobileKeyboard.prototype.SendKey = function (keyCode) {
+        this._Crt.PushKeyDown(0, keyCode, this._CtrlLatched, this._AltLatched, false);
+        this.ClearModifiers();
+    };
+    MobileKeyboard.prototype.ClearModifiers = function () {
+        if (this._CtrlLatched || this._AltLatched) {
+            this._CtrlLatched = false;
+            this._AltLatched = false;
+            this.UpdateModifierHighlight();
+        }
+    };
+    MobileKeyboard.prototype.UpdateModifierHighlight = function () {
+        if (this._CtrlButton) {
+            if (this._CtrlLatched) {
+                this._CtrlButton.style.backgroundColor = '#0d47a1';
+                this._CtrlButton.style.borderColor = '#42a5f5';
+                this._CtrlButton.style.color = '#ffffff';
+                this._CtrlButton.className = 'fTelnetAccessoryKey fTelnetAccessoryKeyLatched';
+            }
+            else {
+                this._CtrlButton.style.backgroundColor = '#2e2e2e';
+                this._CtrlButton.style.borderColor = '#4a4a4a';
+                this._CtrlButton.style.color = '#e0e0e0';
+                this._CtrlButton.className = 'fTelnetAccessoryKey';
+            }
+        }
+        if (this._AltButton) {
+            if (this._AltLatched) {
+                this._AltButton.style.backgroundColor = '#0d47a1';
+                this._AltButton.style.borderColor = '#42a5f5';
+                this._AltButton.style.color = '#ffffff';
+                this._AltButton.className = 'fTelnetAccessoryKey fTelnetAccessoryKeyLatched';
+            }
+            else {
+                this._AltButton.style.backgroundColor = '#2e2e2e';
+                this._AltButton.style.borderColor = '#4a4a4a';
+                this._AltButton.style.color = '#e0e0e0';
+                this._AltButton.className = 'fTelnetAccessoryKey';
+            }
+        }
+        if (this._FnButton) {
+            if (this._FunctionRowVisible) {
+                this._FnButton.style.backgroundColor = '#1565c0';
+                this._FnButton.style.borderColor = '#42a5f5';
+                this._FnButton.style.color = '#ffffff';
+            }
+            else {
+                this._FnButton.style.backgroundColor = '#243447';
+                this._FnButton.style.borderColor = '#4a4a4a';
+                this._FnButton.style.color = '#e0e0e0';
+            }
+        }
+    };
+    MobileKeyboard.prototype.TriggerVibrate = function () {
+        if (!!navigator.vibrate && (this._Options.VirtualKeyboardVibrateDuration > 0)) {
+            navigator.vibrate(this._Options.VirtualKeyboardVibrateDuration);
+        }
+    };
+    MobileKeyboard.prototype.Focus = function () {
+        if (this._Input) {
+            this._Input.focus();
+            this._IsFocused = true;
+            if (this._AccessoryBarEnabled && this._AccessoryBar) {
+                this._AccessoryBar.style.display = 'block';
+            }
+        }
+    };
+    MobileKeyboard.prototype.Blur = function () {
+        if (this._Input) {
+            this._Input.blur();
+            this._IsFocused = false;
+            if (this._AccessoryBar) {
+                this._AccessoryBar.style.display = 'none';
+            }
+        }
+    };
+    MobileKeyboard.prototype.Toggle = function () {
+        if (this._IsFocused) {
+            this.Blur();
+        }
+        else {
+            this.Focus();
+        }
+    };
+    MobileKeyboard.prototype.SetWidth = function (width) {
+        if (this._AccessoryBar) {
+            this._AccessoryBar.style.width = width + 'px';
+            this._AccessoryBar.style.maxWidth = '100%';
+        }
+    };
+    Object.defineProperty(MobileKeyboard.prototype, "IsFocused", {
+        get: function () {
+            return this._IsFocused;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MobileKeyboard.prototype, "AccessoryBarEnabled", {
+        get: function () {
+            return this._AccessoryBarEnabled;
+        },
+        set: function (value) {
+            this._AccessoryBarEnabled = value;
+            if (!value && this._AccessoryBar) {
+                this._AccessoryBar.style.display = 'none';
+            }
+            else if (value && this._IsFocused && this._AccessoryBar) {
+                this._AccessoryBar.style.display = 'block';
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MobileKeyboard.prototype, "AccessoryBarVisible", {
+        get: function () {
+            return (this._AccessoryBar && this._AccessoryBar.style.display !== 'none');
+        },
+        set: function (value) {
+            if (this._AccessoryBar) {
+                this._AccessoryBar.style.display = value ? 'block' : 'none';
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MobileKeyboard.prototype, "HelperInputElement", {
+        get: function () {
+            return this._Input;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(MobileKeyboard.prototype, "AccessoryBarElement", {
+        get: function () {
+            return this._AccessoryBar;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return MobileKeyboard;
+}());
 var VirtualKeyboard = (function () {
     function VirtualKeyboard(crt, container) {
         var _this = this;
@@ -5397,7 +5935,17 @@ var fTelnetClient = (function () {
             var MenuButtonsKeyboard = document.createElement('a');
             MenuButtonsKeyboard.href = '#';
             MenuButtonsKeyboard.innerHTML = 'Keyboard';
-            MenuButtonsKeyboard.addEventListener('click', function (me) { _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible; me.preventDefault(); return false; });
+            MenuButtonsKeyboard.addEventListener('click', function (me) {
+                if (_this._Options.UseNativeKeyboard) {
+                    _this._MobileKeyboard.Toggle();
+                    _this.OnMenuButtonClick(null);
+                }
+                else {
+                    _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible;
+                }
+                me.preventDefault();
+                return false;
+            });
             MenuButtonsRow4Cell1.appendChild(MenuButtonsKeyboard);
             MenuButtonsRow4.appendChild(MenuButtonsRow4Cell1);
             var MenuButtonsRow4Cell2 = document.createElement('td');
@@ -5468,6 +6016,7 @@ var fTelnetClient = (function () {
         this._VirtualKeyboard = new VirtualKeyboard(this._Crt, this._fTelnetContainer);
         this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
         this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
+        this._MobileKeyboard = new MobileKeyboard(this._Crt, this._fTelnetContainer, this._Options);
         this.OnCrtScreenSizeChanged();
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
@@ -5999,6 +6548,9 @@ var fTelnetClient = (function () {
         if (typeof this._StatusBar !== 'undefined') {
             this._StatusBar.style.width = NewWidth - 10 + 'px';
         }
+        if (typeof this._MobileKeyboard !== 'undefined') {
+            this._MobileKeyboard.SetWidth(NewWidth);
+        }
         if ((document.getElementById('fTelnetScript') !== null) && (document.getElementById('fTelnetKeyboardCss') !== null)) {
             var KeyboardSizes = [960, 800, 720, 640, 560, 480, 360, 320];
             for (var i = 0; i < KeyboardSizes.length; i++) {
@@ -6127,6 +6679,36 @@ var fTelnetClient = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(fTelnetClient.prototype, "MobileKeyboard", {
+        get: function () {
+            return this._MobileKeyboard;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fTelnetClient.prototype, "UseNativeKeyboard", {
+        get: function () {
+            return this._Options.UseNativeKeyboard;
+        },
+        set: function (value) {
+            this._Options.UseNativeKeyboard = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(fTelnetClient.prototype, "NativeKeyboardAccessoryBar", {
+        get: function () {
+            return this._Options.NativeKeyboardAccessoryBar;
+        },
+        set: function (value) {
+            this._Options.NativeKeyboardAccessoryBar = value;
+            if (typeof this._MobileKeyboard !== 'undefined') {
+                this._MobileKeyboard.AccessoryBarEnabled = value;
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
     return fTelnetClient;
 }());
 var fTelnetOptions = (function () {
@@ -6155,8 +6737,10 @@ var fTelnetOptions = (function () {
         this.SendLocation = true;
         this.SkipRedrawWhenSameFontSize = false;
         this.SplashScreen = '';
+        this.UseNativeKeyboard = true;
+        this.NativeKeyboardAccessoryBar = true;
         this.VirtualKeyboardVibrateDuration = 25;
-        this.VirtualKeyboardVisible = DetectMobileBrowser.IsMobile;
+        this.VirtualKeyboardVisible = false;
         this.WebSocketUrlPath = '';
     }
     return fTelnetOptions;

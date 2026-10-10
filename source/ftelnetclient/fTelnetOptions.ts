@@ -42,7 +42,9 @@ class fTelnetOptions {
     public SendLocation: boolean = true;
     public SkipRedrawWhenSameFontSize: boolean = false;
     public SplashScreen: string = '';
+    public UseNativeKeyboard: boolean = true;
+    public NativeKeyboardAccessoryBar: boolean = true;
     public VirtualKeyboardVibrateDuration: number = 25;
-    public VirtualKeyboardVisible: boolean = DetectMobileBrowser.IsMobile;
+    public VirtualKeyboardVisible: boolean = false;
     public WebSocketUrlPath: string = '';
 }
