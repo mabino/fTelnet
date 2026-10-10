@@ -19,6 +19,9 @@
 */
 
 class MobileKeyboard {
+    // Events
+    public ontogglefullkeyboard: IEvent = new TypedEvent();
+
     private _Crt: Crt;
     private _Container: HTMLElement;
     private _Options: fTelnetOptions;
@@ -196,6 +199,11 @@ class MobileKeyboard {
             this._FunctionRow.style.display = this._FunctionRowVisible ? 'flex' : 'none';
             this.UpdateModifierHighlight();
         }, 'fTelnetAccessoryKeyFn');
+
+        this.AddButton(this._PrimaryRow, 'Full', (): void => {
+            this.Blur();
+            this.ontogglefullkeyboard.trigger();
+        }, 'fTelnetAccessoryKeyFull');
 
         this.AddButton(this._PrimaryRow, '⌨ ▾', (): void => {
             this.Blur();

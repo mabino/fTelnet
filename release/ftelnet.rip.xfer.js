@@ -9791,6 +9791,7 @@ var RIPParserState;
 //# sourceMappingURL=graph.js.map
 var MobileKeyboard = (function () {
     function MobileKeyboard(crt, container, options) {
+        this.ontogglefullkeyboard = new TypedEvent();
         this._CtrlLatched = false;
         this._AltLatched = false;
         this._FunctionRowVisible = false;
@@ -9927,6 +9928,10 @@ var MobileKeyboard = (function () {
             _this._FunctionRow.style.display = _this._FunctionRowVisible ? 'flex' : 'none';
             _this.UpdateModifierHighlight();
         }, 'fTelnetAccessoryKeyFn');
+        this.AddButton(this._PrimaryRow, 'Full', function () {
+            _this.Blur();
+            _this.ontogglefullkeyboard.trigger();
+        }, 'fTelnetAccessoryKeyFull');
         this.AddButton(this._PrimaryRow, '⌨ ▾', function () {
             _this.Blur();
         }, 'fTelnetAccessoryKeyDismiss');
@@ -10904,6 +10909,9 @@ var fTelnetClient = (function () {
             MenuButtonsKeyboard.innerHTML = 'Keyboard';
             MenuButtonsKeyboard.addEventListener('click', function (me) {
                 if (_this._Options.UseNativeKeyboard) {
+                    if (_this.VirtualKeyboardVisible) {
+                        _this.VirtualKeyboardVisible = false;
+                    }
                     _this._MobileKeyboard.Toggle();
                     _this.OnMenuButtonClick(null);
                 }
@@ -10916,13 +10924,31 @@ var fTelnetClient = (function () {
             MenuButtonsRow4Cell1.appendChild(MenuButtonsKeyboard);
             MenuButtonsRow4.appendChild(MenuButtonsRow4Cell1);
             var MenuButtonsRow4Cell2 = document.createElement('td');
+            var MenuButtonsVirtualKeyboard = document.createElement('a');
+            MenuButtonsVirtualKeyboard.href = '#';
+            MenuButtonsVirtualKeyboard.innerHTML = 'Full&nbsp;Keyboard';
+            MenuButtonsVirtualKeyboard.addEventListener('click', function (me) {
+                if (typeof _this._MobileKeyboard !== 'undefined' && _this._MobileKeyboard.IsFocused) {
+                    _this._MobileKeyboard.Blur();
+                }
+                _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible;
+                _this.OnMenuButtonClick(null);
+                me.preventDefault();
+                return false;
+            });
+            MenuButtonsRow4Cell2.appendChild(MenuButtonsVirtualKeyboard);
+            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell2);
+            MenuButtonsTable.appendChild(MenuButtonsRow4);
+            var MenuButtonsRow4b = document.createElement('tr');
+            var MenuButtonsRow4bCell1 = document.createElement('td');
+            MenuButtonsRow4bCell1.colSpan = 2;
             var MenuButtonsFullScreen = document.createElement('a');
             MenuButtonsFullScreen.href = '#';
             MenuButtonsFullScreen.innerHTML = 'Full&nbsp;Screen';
             MenuButtonsFullScreen.addEventListener('click', function (me) { _this.FullScreenToggle(); me.preventDefault(); return false; });
-            MenuButtonsRow4Cell2.appendChild(MenuButtonsFullScreen);
-            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell2);
-            MenuButtonsTable.appendChild(MenuButtonsRow4);
+            MenuButtonsRow4bCell1.appendChild(MenuButtonsFullScreen);
+            MenuButtonsRow4b.appendChild(MenuButtonsRow4bCell1);
+            MenuButtonsTable.appendChild(MenuButtonsRow4b);
         }
         if (!this._UseModernScrollback) {
             var MenuButtonsRow5 = document.createElement('tr');
@@ -10984,6 +11010,9 @@ var fTelnetClient = (function () {
         this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
         this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
         this._MobileKeyboard = new MobileKeyboard(this._Crt, this._fTelnetContainer, this._Options);
+        this._MobileKeyboard.ontogglefullkeyboard.on(function () {
+            _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible;
+        });
         this.OnCrtScreenSizeChanged();
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {

@@ -131,6 +131,7 @@ describe('Mobile Native Keyboard & Accessory Toolbar', function () {
             assert.ok(buttons.includes('◄'), 'Left arrow button should exist');
             assert.ok(buttons.includes('►'), 'Right arrow button should exist');
             assert.ok(buttons.includes('Fn'), 'Fn button should exist');
+            assert.ok(buttons.includes('Full'), 'Full button should exist');
             assert.ok(buttons.includes('⌨ ▾'), 'Dismiss keyboard button should exist');
         });
 
@@ -212,6 +213,22 @@ describe('Mobile Native Keyboard & Accessory Toolbar', function () {
             dismissBtn.dispatchEvent(new window.MouseEvent('mousedown'));
             assert.strictEqual(mobileKb.AccessoryBarVisible, false);
             assert.strictEqual(mobileKb.IsFocused, false);
+        });
+
+        it('should trigger ontogglefullkeyboard and blur when Full button is clicked', function () {
+            mobileKb.Focus();
+            let toggleFired = false;
+            mobileKb.ontogglefullkeyboard.on(() => {
+                toggleFired = true;
+            });
+
+            const bar = mobileKb.AccessoryBarElement;
+            const fullBtn = Array.from(bar.getElementsByTagName('button')).find(b => b.innerHTML === 'Full');
+            assert.ok(fullBtn, 'Full button should exist');
+
+            fullBtn.dispatchEvent(new window.MouseEvent('mousedown'));
+            assert.strictEqual(toggleFired, true, 'ontogglefullkeyboard event should fire');
+            assert.strictEqual(mobileKb.IsFocused, false, 'MobileKeyboard should blur');
         });
     });
 
@@ -396,6 +413,52 @@ describe('Mobile Native Keyboard & Accessory Toolbar', function () {
             if (container.parentNode) {
                 container.parentNode.removeChild(container);
             }
+        });
+    });
+
+    describe('fTelnetClient Full Keyboard menu and toggle integration', function () {
+        let container, client, options;
+
+        beforeEach(function () {
+            container = document.createElement('div');
+            container.id = 'ftelnet-test-container';
+            document.body.appendChild(container);
+
+            options = new fTelnetOptions();
+            options.UseNativeKeyboard = true;
+            options.VirtualKeyboardVisible = false;
+
+            client = new fTelnetClient('ftelnet-test-container', options);
+        });
+
+        afterEach(function () {
+            if (container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
+        });
+
+        it('should allow toggling VirtualKeyboardVisible directly', function () {
+            assert.strictEqual(client.VirtualKeyboardVisible, false);
+            client.VirtualKeyboardVisible = true;
+            assert.strictEqual(client.VirtualKeyboardVisible, true);
+            client.VirtualKeyboardVisible = false;
+            assert.strictEqual(client.VirtualKeyboardVisible, false);
+        });
+
+        it('should toggle full software keyboard when Full button is clicked on accessory toolbar', function () {
+            assert.strictEqual(client.VirtualKeyboardVisible, false);
+
+            client.MobileKeyboard.Focus();
+            assert.strictEqual(client.MobileKeyboard.IsFocused, true);
+
+            const bar = client.MobileKeyboard.AccessoryBarElement;
+            const fullBtn = Array.from(bar.getElementsByTagName('button')).find(b => b.innerHTML === 'Full');
+            assert.ok(fullBtn);
+
+            fullBtn.dispatchEvent(new window.MouseEvent('mousedown'));
+
+            assert.strictEqual(client.VirtualKeyboardVisible, true);
+            assert.strictEqual(client.MobileKeyboard.IsFocused, false);
         });
     });
 });

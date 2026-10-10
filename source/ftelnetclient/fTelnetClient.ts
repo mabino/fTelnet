@@ -372,6 +372,9 @@ class fTelnetClient {
             MenuButtonsKeyboard.innerHTML = 'Keyboard';
             MenuButtonsKeyboard.addEventListener('click', (me: MouseEvent): boolean => {
                 if (this._Options.UseNativeKeyboard) {
+                    if (this.VirtualKeyboardVisible) {
+                        this.VirtualKeyboardVisible = false;
+                    }
                     this._MobileKeyboard.Toggle();
                     this.OnMenuButtonClick(null);
                 } else {
@@ -382,14 +385,34 @@ class fTelnetClient {
             });
             MenuButtonsRow4Cell1.appendChild(MenuButtonsKeyboard);
             MenuButtonsRow4.appendChild(MenuButtonsRow4Cell1);
+
             var MenuButtonsRow4Cell2: HTMLTableCellElement = document.createElement('td');
+            var MenuButtonsVirtualKeyboard: HTMLAnchorElement = document.createElement('a');
+            MenuButtonsVirtualKeyboard.href = '#';
+            MenuButtonsVirtualKeyboard.innerHTML = 'Full&nbsp;Keyboard';
+            MenuButtonsVirtualKeyboard.addEventListener('click', (me: MouseEvent): boolean => {
+                if (typeof this._MobileKeyboard !== 'undefined' && this._MobileKeyboard.IsFocused) {
+                    this._MobileKeyboard.Blur();
+                }
+                this.VirtualKeyboardVisible = !this.VirtualKeyboardVisible;
+                this.OnMenuButtonClick(null);
+                me.preventDefault();
+                return false;
+            });
+            MenuButtonsRow4Cell2.appendChild(MenuButtonsVirtualKeyboard);
+            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell2);
+            MenuButtonsTable.appendChild(MenuButtonsRow4);
+
+            var MenuButtonsRow4b: HTMLTableRowElement = document.createElement('tr');
+            var MenuButtonsRow4bCell1: HTMLTableCellElement = document.createElement('td');
+            MenuButtonsRow4bCell1.colSpan = 2;
             var MenuButtonsFullScreen: HTMLAnchorElement = document.createElement('a');
             MenuButtonsFullScreen.href = '#';
             MenuButtonsFullScreen.innerHTML = 'Full&nbsp;Screen';
             MenuButtonsFullScreen.addEventListener('click', (me: MouseEvent): boolean => { this.FullScreenToggle(); me.preventDefault(); return false; });
-            MenuButtonsRow4Cell2.appendChild(MenuButtonsFullScreen);
-            MenuButtonsRow4.appendChild(MenuButtonsRow4Cell2);
-            MenuButtonsTable.appendChild(MenuButtonsRow4);
+            MenuButtonsRow4bCell1.appendChild(MenuButtonsFullScreen);
+            MenuButtonsRow4b.appendChild(MenuButtonsRow4bCell1);
+            MenuButtonsTable.appendChild(MenuButtonsRow4b);
         }
 
         if (!this._UseModernScrollback) {
@@ -461,6 +484,9 @@ class fTelnetClient {
 
         // Create the mobile native keyboard helper and accessory bar
         this._MobileKeyboard = new MobileKeyboard(this._Crt, this._fTelnetContainer, this._Options);
+        this._MobileKeyboard.ontogglefullkeyboard.on((): void => {
+            this.VirtualKeyboardVisible = !this.VirtualKeyboardVisible;
+        });
 
         // Size the scrollback and button divs
         this.OnCrtScreenSizeChanged();
