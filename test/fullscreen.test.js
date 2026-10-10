@@ -57,6 +57,26 @@ describe('Full Screen & Mobile Landscape Rotation', function () {
         Object.defineProperty(dom.window, 'innerWidth', { value: width, writable: true, configurable: true });
         Object.defineProperty(dom.window, 'innerHeight', { value: height, writable: true, configurable: true });
 
+        dom.window.visualViewport = {
+            width: width,
+            height: height,
+            _listeners: {},
+            addEventListener(type, listener) {
+                if (!this._listeners[type]) this._listeners[type] = [];
+                this._listeners[type].push(listener);
+            },
+            removeEventListener(type, listener) {
+                if (this._listeners[type]) {
+                    this._listeners[type] = this._listeners[type].filter(l => l !== listener);
+                }
+            },
+            trigger(type) {
+                if (this._listeners[type]) {
+                    this._listeners[type].forEach(l => l({ type }));
+                }
+            }
+        };
+
         dom.window.eval(code);
         return dom;
     }
@@ -147,6 +167,8 @@ describe('Full Screen & Mobile Landscape Rotation', function () {
             // User physically rotates phone to landscape
             dom.window.innerWidth = 844;
             dom.window.innerHeight = 390;
+            dom.window.visualViewport.width = 844;
+            dom.window.visualViewport.height = 390;
             dom.window.dispatchEvent(new dom.window.Event('resize'));
 
             assert.strictEqual(container.classList.contains('fTelnetLandscapeRotated'), false);
@@ -154,9 +176,56 @@ describe('Full Screen & Mobile Landscape Rotation', function () {
             // User physically rotates phone back to portrait
             dom.window.innerWidth = 390;
             dom.window.innerHeight = 844;
+            dom.window.visualViewport.width = 390;
+            dom.window.visualViewport.height = 844;
             dom.window.dispatchEvent(new dom.window.Event('resize'));
 
             assert.strictEqual(container.classList.contains('fTelnetLandscapeRotated'), true);
+        });
+    });
+
+    describe('Viewport and Safari Chrome Scaling (Preventing Cutoff)', function () {
+        it('should constrain canvas height to visualViewport.height so bottom is not cut off', function () {
+            // Mobile Safari in landscape with address bar and tabs: 844x320 visible
+            const dom = createTestDom('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', 844, 400);
+            dom.window.visualViewport.width = 844;
+            dom.window.visualViewport.height = 320; // 320px actual visible height under browser chrome
+
+            const options = new dom.window.fTelnetOptions();
+            options.Hostname = 'localhost';
+            const client = new dom.window.fTelnetClient('fTelnetContainer', options);
+            const container = dom.window.document.getElementById('fTelnetContainer');
+            const canvas = container.querySelector('canvas');
+
+            client.FullScreenToggle(true);
+
+            const canvasHeight = parseInt(canvas.style.height, 10);
+            // Height must fit inside 320px visible area
+            assert(canvasHeight <= 320, `Canvas height (${canvasHeight}px) should fit within visible viewport height (320px)`);
+        });
+
+        it('should dynamically adapt when visualViewport resizes (e.g. toolbars collapsing)', function () {
+            const dom = createTestDom('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', 844, 400);
+            dom.window.visualViewport.width = 844;
+            dom.window.visualViewport.height = 300;
+
+            const options = new dom.window.fTelnetOptions();
+            options.Hostname = 'localhost';
+            const client = new dom.window.fTelnetClient('fTelnetContainer', options);
+            const container = dom.window.document.getElementById('fTelnetContainer');
+            const canvas = container.querySelector('canvas');
+
+            client.FullScreenToggle(true);
+            const initialHeight = parseInt(canvas.style.height, 10);
+            assert(initialHeight <= 300);
+
+            // Safari toolbars minimize, expanding available height to 380
+            dom.window.visualViewport.height = 380;
+            dom.window.visualViewport.trigger('resize');
+
+            const expandedHeight = parseInt(canvas.style.height, 10);
+            assert(expandedHeight > initialHeight, `Canvas should scale up when viewport height expands (${expandedHeight} > ${initialHeight})`);
+            assert(expandedHeight <= 380, `Canvas should not exceed new viewport height of 380px`);
         });
     });
 

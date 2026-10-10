@@ -11059,6 +11059,9 @@ var fTelnetClient = (function () {
             _this.OnWindowResize();
             setTimeout(function () { _this.OnWindowResize(); }, 150);
         }, false);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', function () { _this.OnWindowResize(); }, false);
+        }
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
                 this._Crt.Write(atob('m2ZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2VimyAgV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnSbm0NvcHlyaWdodCAoYykgMjAwOS0'));
@@ -11379,8 +11382,16 @@ var fTelnetClient = (function () {
         if (!this._IsFullScreen || !this._fTelnetContainer) {
             return;
         }
-        var winW = window.innerWidth || document.documentElement.clientWidth;
-        var winH = window.innerHeight || document.documentElement.clientHeight;
+        var winW;
+        var winH;
+        if (window.visualViewport) {
+            winW = Math.floor(window.visualViewport.width);
+            winH = Math.floor(window.visualViewport.height);
+        }
+        else {
+            winW = window.innerWidth || document.documentElement.clientWidth;
+            winH = window.innerHeight || document.documentElement.clientHeight;
+        }
         var isPortrait = winW < winH;
         var shouldRotate = DetectMobileBrowser.IsMobile && isPortrait;
         if (shouldRotate) {
@@ -11389,8 +11400,8 @@ var fTelnetClient = (function () {
         else {
             this._fTelnetContainer.classList.remove('fTelnetLandscapeRotated');
         }
-        var visualAvailableWidth = shouldRotate ? winH : winW;
-        var visualAvailableHeight = shouldRotate ? winW : winH;
+        var visualAvailableWidth = Math.max(0, (shouldRotate ? winH : winW) - 8);
+        var visualAvailableHeight = Math.max(0, (shouldRotate ? winW : winH) - 8);
         var nativeWidth;
         var nativeHeight;
         if (this._Options.Emulation === 'RIP') {

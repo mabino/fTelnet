@@ -1,0 +1,10 @@
+{
+  "name": "fTelnet BBS Client",
+  "short_name": "fTelnet",
+  "description": "HTML5 Web-based BBS Terminal Client",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}

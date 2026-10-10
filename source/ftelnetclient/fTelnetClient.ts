@@ -534,6 +534,9 @@ class fTelnetClient {
             this.OnWindowResize();
             setTimeout((): void => { this.OnWindowResize(); }, 150);
         }, false);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', (): void => { this.OnWindowResize(); }, false);
+        }
 
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
@@ -861,8 +864,17 @@ class fTelnetClient {
     private UpdateFullScreenLayout(): void {
         if (!this._IsFullScreen || !this._fTelnetContainer) { return; }
 
-        var winW: number = window.innerWidth || document.documentElement.clientWidth;
-        var winH: number = window.innerHeight || document.documentElement.clientHeight;
+        var winW: number;
+        var winH: number;
+
+        if (window.visualViewport) {
+            winW = Math.floor(window.visualViewport.width);
+            winH = Math.floor(window.visualViewport.height);
+        } else {
+            winW = window.innerWidth || document.documentElement.clientWidth;
+            winH = window.innerHeight || document.documentElement.clientHeight;
+        }
+
         var isPortrait: boolean = winW < winH;
         var shouldRotate: boolean = DetectMobileBrowser.IsMobile && isPortrait;
 
@@ -872,8 +884,9 @@ class fTelnetClient {
             this._fTelnetContainer.classList.remove('fTelnetLandscapeRotated');
         }
 
-        var visualAvailableWidth: number = shouldRotate ? winH : winW;
-        var visualAvailableHeight: number = shouldRotate ? winW : winH;
+        // Leave a safety margin for safe-area insets/address bar chrome so content is never cut off
+        var visualAvailableWidth: number = Math.max(0, (shouldRotate ? winH : winW) - 8);
+        var visualAvailableHeight: number = Math.max(0, (shouldRotate ? winW : winH) - 8);
 
         var nativeWidth: number;
         var nativeHeight: number;
