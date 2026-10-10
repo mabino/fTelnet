@@ -63,6 +63,12 @@ class fTelnetClient {
             throw new Error(Message);
         } else {
             this._Options = options;
+            if (typeof this._Options.AutoScale === 'undefined') {
+                this._Options.AutoScale = true;
+            }
+            if (typeof this._Options.MaxScale === 'undefined') {
+                this._Options.MaxScale = 1.0;
+            }
 
             // Restore user's preferred screen size, if they have one
             try {
@@ -490,6 +496,9 @@ class fTelnetClient {
 
         // Size the scrollback and button divs
         this.OnCrtScreenSizeChanged();
+
+        window.addEventListener('resize', (): void => { this.OnWindowResize(); }, false);
+        window.addEventListener('orientationchange', (): void => { this.OnWindowResize(); }, false);
 
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
@@ -1018,37 +1027,106 @@ class fTelnetClient {
         }
     }
 
+    private OnWindowResize(): void {
+        this.OnCrtScreenSizeChanged();
+    }
+
     private OnCrtScreenSizeChanged(): void {
         var NewWidth: number;
         var NewHeight: number;
 
         if (this._Options.Emulation === 'RIP') {
             NewWidth = 640;
+            NewHeight = 350;
         } else {
             NewHeight = this._Crt.ScreenRows * this._Crt.Font.Height;
 
             if (this._UseModernScrollback) {
                 // Non-mobile means modern scrollback, which needs both width and height to be set
                 NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width + GetScrollbarWidth.Width;
-
-                this._ClientContainer.style.width = NewWidth + 'px';
-                this._ClientContainer.style.height = NewHeight + 'px';
-                this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
             } else {
                 // Now that the client container has a black border around it, we also need to set the width and height for
                 // classic scrollback (otherwise there will be whitespace between the client and the border)
                 NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width;
-
-                this._ClientContainer.style.width = NewWidth + 'px';
-                this._ClientContainer.style.height = NewHeight + 'px';
             }
         }
 
+        var Scale: number = 1.0;
+        if (this._Options.AutoScale) {
+            var AvailableWidth: number = window.innerWidth || document.documentElement.clientWidth;
+            if (this._fTelnetContainer && this._fTelnetContainer.parentElement) {
+                try {
+                    var parent = this._fTelnetContainer.parentElement;
+                    var style = window.getComputedStyle(parent);
+                    var paddingLeft = parseFloat(style.paddingLeft) || 0;
+                    var paddingRight = parseFloat(style.paddingRight) || 0;
+                    var parentContentWidth = parent.clientWidth - paddingLeft - paddingRight;
+                    if (parentContentWidth > 0 && parentContentWidth < AvailableWidth) {
+                        AvailableWidth = parentContentWidth;
+                    }
+                } catch (e) {
+                    if (this._fTelnetContainer.parentElement.clientWidth > 0 && this._fTelnetContainer.parentElement.clientWidth < AvailableWidth) {
+                        AvailableWidth = this._fTelnetContainer.parentElement.clientWidth;
+                    }
+                }
+            }
+
+            if (NewWidth > AvailableWidth) {
+                Scale = AvailableWidth / NewWidth;
+            } else if (typeof this._Options.MaxScale === 'number' && this._Options.MaxScale > 1.0) {
+                var TargetScale: number = AvailableWidth / NewWidth;
+                Scale = Math.min(TargetScale, this._Options.MaxScale);
+            }
+        }
+
+        var DisplayWidth: number = Math.floor(NewWidth * Scale);
+        var DisplayHeight: number = Math.floor(NewHeight * Scale);
+
+        if (this._Options.Emulation === 'RIP') {
+            this._ClientContainer.style.width = DisplayWidth + 'px';
+            this._ClientContainer.style.height = DisplayHeight + 'px';
+            if (this._Crt && this._Crt.Canvas) {
+                this._Crt.Canvas.style.width = DisplayWidth + 'px';
+                this._Crt.Canvas.style.height = DisplayHeight + 'px';
+            }
+            var GraphCanvas = document.getElementById('fTelnetGraphCanvas');
+            if (GraphCanvas) {
+                GraphCanvas.style.width = DisplayWidth + 'px';
+                GraphCanvas.style.height = DisplayHeight + 'px';
+            }
+        } else {
+            if (this._UseModernScrollback) {
+                // Non-mobile means modern scrollback, which needs both width and height to be set
+                this._ClientContainer.style.width = DisplayWidth + 'px';
+                this._ClientContainer.style.height = DisplayHeight + 'px';
+                this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
+
+                if (this._Crt && this._Crt.Canvas) {
+                    this._Crt.Canvas.style.width = Math.floor(this._Crt.Canvas.width * Scale) + 'px';
+                    this._Crt.Canvas.style.height = Math.floor(this._Crt.Canvas.height * Scale) + 'px';
+                }
+            } else {
+                // Now that the client container has a black border around it, we also need to set the width and height for
+                // classic scrollback (otherwise there will be whitespace between the client and the border)
+                this._ClientContainer.style.width = DisplayWidth + 'px';
+                this._ClientContainer.style.height = DisplayHeight + 'px';
+                if (this._Crt && this._Crt.Canvas) {
+                    this._Crt.Canvas.style.width = DisplayWidth + 'px';
+                    this._Crt.Canvas.style.height = DisplayHeight + 'px';
+                }
+            }
+        }
+
+        if (this._fTelnetContainer) {
+            this._fTelnetContainer.style.width = DisplayWidth + 'px';
+            this._fTelnetContainer.style.maxWidth = '100%';
+        }
+
         // TODO -10 is 5px of left and right padding -- would be good if this wasn't hardcoded since it can be customized in the .css
-        if (typeof this._FocusWarningBar !== 'undefined') { this._FocusWarningBar.style.width = NewWidth - 10 + 'px'; }
-        if (typeof this._ScrollbackBar !== 'undefined') { this._ScrollbackBar.style.width = NewWidth - 10 + 'px'; }
-        if (typeof this._StatusBar !== 'undefined') { this._StatusBar.style.width = NewWidth - 10 + 'px'; }
-        if (typeof this._MobileKeyboard !== 'undefined') { this._MobileKeyboard.SetWidth(NewWidth); }
+        if (typeof this._FocusWarningBar !== 'undefined') { this._FocusWarningBar.style.width = Math.max(0, DisplayWidth - 10) + 'px'; }
+        if (typeof this._ScrollbackBar !== 'undefined') { this._ScrollbackBar.style.width = Math.max(0, DisplayWidth - 10) + 'px'; }
+        if (typeof this._StatusBar !== 'undefined') { this._StatusBar.style.width = Math.max(0, DisplayWidth - 10) + 'px'; }
+        if (typeof this._MobileKeyboard !== 'undefined') { this._MobileKeyboard.SetWidth(DisplayWidth); }
 
         // Pick virtual keyboard width
         if ((document.getElementById('fTelnetScript') !== null) && (document.getElementById('fTelnetKeyboardCss') !== null)) {
@@ -1057,7 +1135,7 @@ class fTelnetClient {
             for (var i: number = 0; i < KeyboardSizes.length; i++) {
                 // Check if the keyboard size is less than or equal to both the new crt size and the screen size
                 // The screen size check is so that we use the 360 or 320 width on phones (otherwise it'd use the 480 size to match the crt window)
-                if (((NewWidth >= KeyboardSizes[i]) && (KeyboardSizes[i] <= screen.width)) || (i === (KeyboardSizes.length - 1))) {
+                if (((DisplayWidth >= KeyboardSizes[i]) && (KeyboardSizes[i] <= screen.width)) || (i === (KeyboardSizes.length - 1))) {
                     (<HTMLLinkElement>document.getElementById('fTelnetKeyboardCss')).href = StringUtils.GetUrl('keyboard/keyboard-' + KeyboardSizes[i].toString(10) + '.min.css');
                     break;
                 }
@@ -1073,7 +1151,9 @@ class fTelnetClient {
     private OnMenuButtonClick(e: MouseEvent): void {
         this._MenuButtons.style.display = (this._MenuButtons.style.display === 'none') ? 'block' : 'none';
         if (e !== null) {
-            this._MenuButtons.style.left = e.pageX + 'px';
+            var maxLeft = (window.innerWidth || document.documentElement.clientWidth) - this._MenuButtons.clientWidth - 10;
+            var targetLeft = Math.max(0, Math.min(e.pageX, maxLeft));
+            this._MenuButtons.style.left = targetLeft + 'px';
             this._MenuButtons.style.top = (e.pageY - this._MenuButtons.clientHeight) + 'px';
         }
     }

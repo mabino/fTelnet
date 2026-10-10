@@ -42,6 +42,8 @@ class fTelnetOptions {
     public SendLocation: boolean = true;
     public SkipRedrawWhenSameFontSize: boolean = false;
     public SplashScreen: string = '';
+    public AutoScale: boolean = true;
+    public MaxScale: number = 1.0;
     public UseNativeKeyboard: boolean = true;
     public NativeKeyboardAccessoryBar: boolean = true;
     public VirtualKeyboardVibrateDuration: number = 25;

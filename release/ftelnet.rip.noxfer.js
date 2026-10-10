@@ -7556,15 +7556,20 @@ var RIP = (function () {
     };
     RIP.prototype.OnGraphCanvasMouseDown = function (me) {
         var _this = this;
+        var rect = this._Graph.Canvas.getBoundingClientRect();
+        var scaleX = (rect.width > 0) ? (this._Graph.Canvas.width / rect.width) : 1;
+        var scaleY = (rect.height > 0) ? (this._Graph.Canvas.height / rect.height) : 1;
+        var clickX = me.offsetX * scaleX;
+        var clickY = me.offsetY * scaleY;
         for (var i = this._MouseFields.length - 1; i >= 0; i--) {
             var MB = this._MouseFields[i];
-            if (me.offsetX < MB.Coords.left)
+            if (clickX < MB.Coords.left)
                 continue;
-            if (me.offsetX > MB.Coords.right)
+            if (clickX > MB.Coords.right)
                 continue;
-            if (me.offsetY < MB.Coords.top)
+            if (clickY < MB.Coords.top)
                 continue;
-            if (me.offsetY > MB.Coords.bottom)
+            if (clickY > MB.Coords.bottom)
                 continue;
             this._Graph.Canvas.removeEventListener('mousedown', this.OnGraphCanvasMouseDown);
             this._Graph.Canvas.addEventListener('mousemove', function (me) { _this.OnGraphCanvasMouseMove(me); });
@@ -9026,6 +9031,12 @@ var fTelnetClient = (function () {
         }
         else {
             this._Options = options;
+            if (typeof this._Options.AutoScale === 'undefined') {
+                this._Options.AutoScale = true;
+            }
+            if (typeof this._Options.MaxScale === 'undefined') {
+                this._Options.MaxScale = 1.0;
+            }
             try {
                 var storedColumns = window.localStorage.getItem('ScreenColumns');
                 var storedRows = window.localStorage.getItem('ScreenRows');
@@ -9387,6 +9398,8 @@ var fTelnetClient = (function () {
             _this.VirtualKeyboardVisible = !_this.VirtualKeyboardVisible;
         });
         this.OnCrtScreenSizeChanged();
+        window.addEventListener('resize', function () { _this.OnWindowResize(); }, false);
+        window.addEventListener('orientationchange', function () { _this.OnWindowResize(); }, false);
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
                 this._Crt.Write(atob('m2ZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2VimyAgV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnSbm0NvcHlyaWdodCAoYykgMjAwOS0'));
@@ -9888,42 +9901,107 @@ var fTelnetClient = (function () {
             this._Connection.writeString(position);
         }
     };
+    fTelnetClient.prototype.OnWindowResize = function () {
+        this.OnCrtScreenSizeChanged();
+    };
     fTelnetClient.prototype.OnCrtScreenSizeChanged = function () {
         var NewWidth;
         var NewHeight;
         if (this._Options.Emulation === 'RIP') {
             NewWidth = 640;
+            NewHeight = 350;
         }
         else {
             NewHeight = this._Crt.ScreenRows * this._Crt.Font.Height;
             if (this._UseModernScrollback) {
                 NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width + GetScrollbarWidth.Width;
-                this._ClientContainer.style.width = NewWidth + 'px';
-                this._ClientContainer.style.height = NewHeight + 'px';
-                this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
             }
             else {
                 NewWidth = this._Crt.ScreenCols * this._Crt.Font.Width;
-                this._ClientContainer.style.width = NewWidth + 'px';
-                this._ClientContainer.style.height = NewHeight + 'px';
             }
         }
+        var Scale = 1.0;
+        if (this._Options.AutoScale) {
+            var AvailableWidth = window.innerWidth || document.documentElement.clientWidth;
+            if (this._fTelnetContainer && this._fTelnetContainer.parentElement) {
+                try {
+                    var parent = this._fTelnetContainer.parentElement;
+                    var style = window.getComputedStyle(parent);
+                    var paddingLeft = parseFloat(style.paddingLeft) || 0;
+                    var paddingRight = parseFloat(style.paddingRight) || 0;
+                    var parentContentWidth = parent.clientWidth - paddingLeft - paddingRight;
+                    if (parentContentWidth > 0 && parentContentWidth < AvailableWidth) {
+                        AvailableWidth = parentContentWidth;
+                    }
+                }
+                catch (e) {
+                    if (this._fTelnetContainer.parentElement.clientWidth > 0 && this._fTelnetContainer.parentElement.clientWidth < AvailableWidth) {
+                        AvailableWidth = this._fTelnetContainer.parentElement.clientWidth;
+                    }
+                }
+            }
+            if (NewWidth > AvailableWidth) {
+                Scale = AvailableWidth / NewWidth;
+            }
+            else if (typeof this._Options.MaxScale === 'number' && this._Options.MaxScale > 1.0) {
+                var TargetScale = AvailableWidth / NewWidth;
+                Scale = Math.min(TargetScale, this._Options.MaxScale);
+            }
+        }
+        var DisplayWidth = Math.floor(NewWidth * Scale);
+        var DisplayHeight = Math.floor(NewHeight * Scale);
+        if (this._Options.Emulation === 'RIP') {
+            this._ClientContainer.style.width = DisplayWidth + 'px';
+            this._ClientContainer.style.height = DisplayHeight + 'px';
+            if (this._Crt && this._Crt.Canvas) {
+                this._Crt.Canvas.style.width = DisplayWidth + 'px';
+                this._Crt.Canvas.style.height = DisplayHeight + 'px';
+            }
+            var GraphCanvas = document.getElementById('fTelnetGraphCanvas');
+            if (GraphCanvas) {
+                GraphCanvas.style.width = DisplayWidth + 'px';
+                GraphCanvas.style.height = DisplayHeight + 'px';
+            }
+        }
+        else {
+            if (this._UseModernScrollback) {
+                this._ClientContainer.style.width = DisplayWidth + 'px';
+                this._ClientContainer.style.height = DisplayHeight + 'px';
+                this._ClientContainer.scrollTop = this._ClientContainer.scrollHeight;
+                if (this._Crt && this._Crt.Canvas) {
+                    this._Crt.Canvas.style.width = Math.floor(this._Crt.Canvas.width * Scale) + 'px';
+                    this._Crt.Canvas.style.height = Math.floor(this._Crt.Canvas.height * Scale) + 'px';
+                }
+            }
+            else {
+                this._ClientContainer.style.width = DisplayWidth + 'px';
+                this._ClientContainer.style.height = DisplayHeight + 'px';
+                if (this._Crt && this._Crt.Canvas) {
+                    this._Crt.Canvas.style.width = DisplayWidth + 'px';
+                    this._Crt.Canvas.style.height = DisplayHeight + 'px';
+                }
+            }
+        }
+        if (this._fTelnetContainer) {
+            this._fTelnetContainer.style.width = DisplayWidth + 'px';
+            this._fTelnetContainer.style.maxWidth = '100%';
+        }
         if (typeof this._FocusWarningBar !== 'undefined') {
-            this._FocusWarningBar.style.width = NewWidth - 10 + 'px';
+            this._FocusWarningBar.style.width = Math.max(0, DisplayWidth - 10) + 'px';
         }
         if (typeof this._ScrollbackBar !== 'undefined') {
-            this._ScrollbackBar.style.width = NewWidth - 10 + 'px';
+            this._ScrollbackBar.style.width = Math.max(0, DisplayWidth - 10) + 'px';
         }
         if (typeof this._StatusBar !== 'undefined') {
-            this._StatusBar.style.width = NewWidth - 10 + 'px';
+            this._StatusBar.style.width = Math.max(0, DisplayWidth - 10) + 'px';
         }
         if (typeof this._MobileKeyboard !== 'undefined') {
-            this._MobileKeyboard.SetWidth(NewWidth);
+            this._MobileKeyboard.SetWidth(DisplayWidth);
         }
         if ((document.getElementById('fTelnetScript') !== null) && (document.getElementById('fTelnetKeyboardCss') !== null)) {
             var KeyboardSizes = [960, 800, 720, 640, 560, 480, 360, 320];
             for (var i = 0; i < KeyboardSizes.length; i++) {
-                if (((NewWidth >= KeyboardSizes[i]) && (KeyboardSizes[i] <= screen.width)) || (i === (KeyboardSizes.length - 1))) {
+                if (((DisplayWidth >= KeyboardSizes[i]) && (KeyboardSizes[i] <= screen.width)) || (i === (KeyboardSizes.length - 1))) {
                     document.getElementById('fTelnetKeyboardCss').href = StringUtils.GetUrl('keyboard/keyboard-' + KeyboardSizes[i].toString(10) + '.min.css');
                     break;
                 }
@@ -9937,7 +10015,9 @@ var fTelnetClient = (function () {
     fTelnetClient.prototype.OnMenuButtonClick = function (e) {
         this._MenuButtons.style.display = (this._MenuButtons.style.display === 'none') ? 'block' : 'none';
         if (e !== null) {
-            this._MenuButtons.style.left = e.pageX + 'px';
+            var maxLeft = (window.innerWidth || document.documentElement.clientWidth) - this._MenuButtons.clientWidth - 10;
+            var targetLeft = Math.max(0, Math.min(e.pageX, maxLeft));
+            this._MenuButtons.style.left = targetLeft + 'px';
             this._MenuButtons.style.top = (e.pageY - this._MenuButtons.clientHeight) + 'px';
         }
     };
@@ -10106,6 +10186,8 @@ var fTelnetOptions = (function () {
         this.SendLocation = true;
         this.SkipRedrawWhenSameFontSize = false;
         this.SplashScreen = '';
+        this.AutoScale = true;
+        this.MaxScale = 1.0;
         this.UseNativeKeyboard = true;
         this.NativeKeyboardAccessoryBar = true;
         this.VirtualKeyboardVibrateDuration = 25;

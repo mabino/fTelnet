@@ -1,5 +1,6 @@
 .fTelnetContainer {
-    box-sizing: content-box;
+    box-sizing: border-box;
+    max-width: 100%;
     margin: auto;
 }
 
@@ -14,12 +15,14 @@
     .fTelnetContainer canvas {
         display: block;
         margin: auto;
+        max-width: 100%;
     }
 
 .fTelnetClientContainer {
     border: 1px solid black;
     position: relative;
     margin: auto;
+    max-width: 100%;
 }
 
 .fTelnetConnectButton {

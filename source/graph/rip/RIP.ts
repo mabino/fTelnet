@@ -1050,14 +1050,20 @@ class RIP {
 
     // Can't use this since it isn't referring to RIP (no fat arrow used to call)
     private OnGraphCanvasMouseDown(me: MouseEvent): void {
+        var rect = this._Graph.Canvas.getBoundingClientRect();
+        var scaleX = (rect.width > 0) ? (this._Graph.Canvas.width / rect.width) : 1;
+        var scaleY = (rect.height > 0) ? (this._Graph.Canvas.height / rect.height) : 1;
+        var clickX = me.offsetX * scaleX;
+        var clickY = me.offsetY * scaleY;
+
         for (var i: number = this._MouseFields.length - 1; i >= 0; i--) {
             var MB: MouseButton = this._MouseFields[i];
 
             // Hit test for this button
-            if (me.offsetX < MB.Coords.left) continue;
-            if (me.offsetX > MB.Coords.right) continue;
-            if (me.offsetY < MB.Coords.top) continue;
-            if (me.offsetY > MB.Coords.bottom) continue;
+            if (clickX < MB.Coords.left) continue;
+            if (clickX > MB.Coords.right) continue;
+            if (clickY < MB.Coords.top) continue;
+            if (clickY > MB.Coords.bottom) continue;
 
             // We're in the region, add events
             this._Graph.Canvas.removeEventListener('mousedown', this.OnGraphCanvasMouseDown);
