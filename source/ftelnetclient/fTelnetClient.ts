@@ -31,12 +31,15 @@ class fTelnetClient {
     private _DataTimer: number;
     private _FocusWarningBar: HTMLDivElement;
     private _fTelnetContainer: HTMLElement;
+    private _HamburgerButton: HTMLButtonElement;
     private _HasFocus: boolean = true;
     private _InitMessageBar: HTMLDivElement;
+    private _IsFullScreen: boolean = false;
     private _LastTimer: number = 0;
     private _LoadingProxySettings: number = 0;
     private _MenuButton: HTMLAnchorElement;
     private _MenuButtons: HTMLDivElement;
+    private _MenuButtonsFullScreen: HTMLAnchorElement;
     private _MobileKeyboard: MobileKeyboard;
     private _RIP: RIP;
     private _ScrollbackBar: HTMLDivElement;
@@ -120,6 +123,7 @@ class fTelnetClient {
                 throw new Error(Message);
             } else {
                 this._fTelnetContainer = Container;
+                this._fTelnetContainer.classList.add('fTelnetContainer');
             }
         } else {
             var Message = 'fTelnet Error: fTelnet constructor was passed an invalid container id';
@@ -419,6 +423,7 @@ class fTelnetClient {
             MenuButtonsRow4bCell1.appendChild(MenuButtonsFullScreen);
             MenuButtonsRow4b.appendChild(MenuButtonsRow4bCell1);
             MenuButtonsTable.appendChild(MenuButtonsRow4b);
+            this._MenuButtonsFullScreen = MenuButtonsFullScreen;
         }
 
         if (!this._UseModernScrollback) {
@@ -480,8 +485,35 @@ class fTelnetClient {
 
         this._MenuButtons.appendChild(MenuButtonsTable);
         this._MenuButtons.style.display = 'none';
-        this._MenuButtons.style.zIndex = '1500';  // TODO Maybe a constant from another file to help keep zindexes correct for different elements?
-        document.body.appendChild(this._MenuButtons);
+        this._MenuButtons.style.zIndex = '100001';
+        this._fTelnetContainer.appendChild(this._MenuButtons);
+
+        // Create the transparent hamburger menu button for fullscreen landscape mode
+        this._HamburgerButton = document.createElement('button');
+        this._HamburgerButton.className = 'fTelnetHamburgerButton';
+        this._HamburgerButton.setAttribute('aria-label', 'Menu');
+        this._HamburgerButton.innerHTML = '<svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><rect y="3" width="20" height="2.5" rx="1.25"/><rect y="8.75" width="20" height="2.5" rx="1.25"/><rect y="14.5" width="20" height="2.5" rx="1.25"/></svg>';
+        this._HamburgerButton.addEventListener('click', (e: MouseEvent): void => {
+            this.OnHamburgerButtonClick(e);
+        }, false);
+        this._HamburgerButton.addEventListener('touchend', (e: TouchEvent): void => {
+            e.preventDefault();
+            this.OnHamburgerButtonClick(e as any);
+        }, false);
+        this._fTelnetContainer.appendChild(this._HamburgerButton);
+
+        // Close menu if user clicks/taps outside of it
+        document.addEventListener('click', (e: MouseEvent): void => {
+            if (this._MenuButtons && this._MenuButtons.style.display !== 'none') {
+                var target = e.target as Node;
+                if (!this._MenuButtons.contains(target) && (!this._MenuButton || !this._MenuButton.contains(target)) && (!this._HamburgerButton || !this._HamburgerButton.contains(target))) {
+                    this._MenuButtons.style.display = 'none';
+                }
+            }
+        }, false);
+
+        document.addEventListener('fullscreenchange', (): void => { this.OnNativeFullScreenChange(); }, false);
+        document.addEventListener('webkitfullscreenchange', (): void => { this.OnNativeFullScreenChange(); }, false);
 
         // Create the virtual keyboard
         this._VirtualKeyboard = new VirtualKeyboard(this._Crt, this._fTelnetContainer);
@@ -498,7 +530,10 @@ class fTelnetClient {
         this.OnCrtScreenSizeChanged();
 
         window.addEventListener('resize', (): void => { this.OnWindowResize(); }, false);
-        window.addEventListener('orientationchange', (): void => { this.OnWindowResize(); }, false);
+        window.addEventListener('orientationchange', (): void => {
+            this.OnWindowResize();
+            setTimeout((): void => { this.OnWindowResize(); }, 150);
+        }, false);
 
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
@@ -728,40 +763,174 @@ class fTelnetClient {
         }
     }
 
+    public get FullScreen(): boolean {
+        return this._IsFullScreen;
+    }
+
     public FullScreenToggle(fullscreen: boolean | null = null): void {
         // Hide the menu buttons (in case we clicked the Connect menu button)
         if (typeof this._MenuButtons !== 'undefined') { this._MenuButtons.style.display = 'none'; }
 
-        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            // Check if we want to toggle to the off state -- if we do, then don't set full screen
-            if (fullscreen === false) {
-                return;
+        var targetState: boolean = (fullscreen === null) ? !this._IsFullScreen : !!fullscreen;
+        if (targetState === this._IsFullScreen) {
+            return;
+        }
+
+        this._IsFullScreen = targetState;
+
+        if (this._IsFullScreen) {
+            // Attempt standard Fullscreen API if supported
+            try {
+                if (this._fTelnetContainer.requestFullscreen) {
+                    var p = this._fTelnetContainer.requestFullscreen();
+                    if (p && p.catch) { p.catch((): void => {}); }
+                } else if (this._fTelnetContainer.webkitRequestFullscreen) {
+                    this._fTelnetContainer.webkitRequestFullscreen();
+                } else if (this._fTelnetContainer.mozRequestFullScreen) {
+                    this._fTelnetContainer.mozRequestFullScreen();
+                } else if (this._fTelnetContainer.msRequestFullscreen) {
+                    this._fTelnetContainer.msRequestFullscreen();
+                }
+            } catch (e) {}
+
+            // Attempt Screen Orientation lock to landscape if supported
+            try {
+                if (screen.orientation && (screen.orientation as any).lock) {
+                    var pLock = (screen.orientation as any).lock('landscape');
+                    if (pLock && pLock.catch) { pLock.catch((): void => {}); }
+                }
+            } catch (e) {}
+
+            this._fTelnetContainer.classList.add('fTelnetFullScreen');
+            if (this._MenuButtonsFullScreen) {
+                this._MenuButtonsFullScreen.innerHTML = 'Exit&nbsp;Full&nbsp;Screen';
             }
 
-            if (this._fTelnetContainer.requestFullscreen) {
-                this._fTelnetContainer.requestFullscreen();
-            } else if (this._fTelnetContainer.msRequestFullscreen) {
-                this._fTelnetContainer.msRequestFullscreen();
-            } else if (this._fTelnetContainer.mozRequestFullScreen) {
-                this._fTelnetContainer.mozRequestFullScreen();
-            } else if (this._fTelnetContainer.webkitRequestFullscreen) {
-                this._fTelnetContainer.webkitRequestFullscreen();
+            try {
+                document.body.style.overflow = 'hidden';
+            } catch (e) {}
+
+            this.UpdateFullScreenLayout();
+        } else {
+            // Exit native fullscreen if active
+            try {
+                if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                    if (document.exitFullscreen) {
+                        var pExit = document.exitFullscreen();
+                        if (pExit && pExit.catch) { pExit.catch((): void => {}); }
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+            } catch (e) {}
+
+            // Attempt Screen Orientation unlock if supported
+            try {
+                if (screen.orientation && (screen.orientation as any).unlock) {
+                    (screen.orientation as any).unlock();
+                }
+            } catch (e) {}
+
+            this._fTelnetContainer.classList.remove('fTelnetFullScreen');
+            this._fTelnetContainer.classList.remove('fTelnetLandscapeRotated');
+
+            if (this._MenuButtonsFullScreen) {
+                this._MenuButtonsFullScreen.innerHTML = 'Full&nbsp;Screen';
+            }
+
+            try {
+                document.body.style.overflow = '';
+            } catch (e) {}
+
+            this.OnCrtScreenSizeChanged();
+        }
+    }
+
+    private OnNativeFullScreenChange(): void {
+        var isNativeFs: boolean = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (!isNativeFs && this._IsFullScreen && !DetectMobileBrowser.IsMobile) {
+            // User exited native fullscreen on desktop (e.g. pressed Esc)
+            this.FullScreenToggle(false);
+        }
+    }
+
+    private UpdateFullScreenLayout(): void {
+        if (!this._IsFullScreen || !this._fTelnetContainer) { return; }
+
+        var winW: number = window.innerWidth || document.documentElement.clientWidth;
+        var winH: number = window.innerHeight || document.documentElement.clientHeight;
+        var isPortrait: boolean = winW < winH;
+        var shouldRotate: boolean = DetectMobileBrowser.IsMobile && isPortrait;
+
+        if (shouldRotate) {
+            this._fTelnetContainer.classList.add('fTelnetLandscapeRotated');
+        } else {
+            this._fTelnetContainer.classList.remove('fTelnetLandscapeRotated');
+        }
+
+        var visualAvailableWidth: number = shouldRotate ? winH : winW;
+        var visualAvailableHeight: number = shouldRotate ? winW : winH;
+
+        var nativeWidth: number;
+        var nativeHeight: number;
+
+        if (this._Options.Emulation === 'RIP') {
+            nativeWidth = 640;
+            nativeHeight = 350;
+        } else {
+            nativeHeight = this._Crt.ScreenRows * this._Crt.Font.Height;
+            nativeWidth = this._Crt.ScreenCols * this._Crt.Font.Width;
+        }
+
+        var scale: number = Math.min(visualAvailableWidth / nativeWidth, visualAvailableHeight / nativeHeight);
+        var displayWidth: number = Math.floor(nativeWidth * scale);
+        var displayHeight: number = Math.floor(nativeHeight * scale);
+
+        if (this._Options.Emulation === 'RIP') {
+            this._ClientContainer.style.width = displayWidth + 'px';
+            this._ClientContainer.style.height = displayHeight + 'px';
+            if (this._Crt && this._Crt.Canvas) {
+                this._Crt.Canvas.style.width = displayWidth + 'px';
+                this._Crt.Canvas.style.height = displayHeight + 'px';
+            }
+            var GraphCanvas = document.getElementById('fTelnetGraphCanvas');
+            if (GraphCanvas) {
+                GraphCanvas.style.width = displayWidth + 'px';
+                GraphCanvas.style.height = displayHeight + 'px';
             }
         } else {
-            // Check if we want to toggle to the on state -- if we do, then don't exit full screen
-            if (fullscreen === true) {
-                return;
+            this._ClientContainer.style.width = displayWidth + 'px';
+            this._ClientContainer.style.height = displayHeight + 'px';
+            if (this._Crt && this._Crt.Canvas) {
+                this._Crt.Canvas.style.width = displayWidth + 'px';
+                this._Crt.Canvas.style.height = displayHeight + 'px';
             }
+        }
 
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
+        if (typeof this._FocusWarningBar !== 'undefined') { this._FocusWarningBar.style.width = Math.max(0, displayWidth - 10) + 'px'; }
+        if (typeof this._ScrollbackBar !== 'undefined') { this._ScrollbackBar.style.width = Math.max(0, displayWidth - 10) + 'px'; }
+        if (typeof this._MobileKeyboard !== 'undefined') { this._MobileKeyboard.SetWidth(displayWidth); }
+    }
+
+    private OnHamburgerButtonClick(e?: MouseEvent): void {
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
+        if (typeof this._MenuButtons === 'undefined') { return; }
+
+        var isVisible: boolean = this._MenuButtons.style.display !== 'none' && this._MenuButtons.style.display !== '';
+        if (isVisible) {
+            this._MenuButtons.style.display = 'none';
+        } else {
+            this._MenuButtons.style.display = 'block';
+            this._MenuButtons.style.right = '10px';
+            this._MenuButtons.style.left = 'auto';
+            var topOffset = (this._HamburgerButton ? this._HamburgerButton.offsetTop + this._HamburgerButton.offsetHeight + 6 : 56);
+            this._MenuButtons.style.top = topOffset + 'px';
         }
     }
 
@@ -1028,7 +1197,11 @@ class fTelnetClient {
     }
 
     private OnWindowResize(): void {
-        this.OnCrtScreenSizeChanged();
+        if (this._IsFullScreen) {
+            this.UpdateFullScreenLayout();
+        } else {
+            this.OnCrtScreenSizeChanged();
+        }
     }
 
     private OnCrtScreenSizeChanged(): void {
@@ -1148,13 +1321,18 @@ class fTelnetClient {
         this._Timer = setInterval((): void => { this.OnTimer(); }, 250);
     }
 
-    private OnMenuButtonClick(e: MouseEvent): void {
+    private OnMenuButtonClick(e: MouseEvent | null): void {
         this._MenuButtons.style.display = (this._MenuButtons.style.display === 'none') ? 'block' : 'none';
-        if (e !== null) {
-            var maxLeft = (window.innerWidth || document.documentElement.clientWidth) - this._MenuButtons.clientWidth - 10;
-            var targetLeft = Math.max(0, Math.min(e.pageX, maxLeft));
-            this._MenuButtons.style.left = targetLeft + 'px';
-            this._MenuButtons.style.top = (e.pageY - this._MenuButtons.clientHeight) + 'px';
+        if (e !== null && this._MenuButtons.style.display === 'block') {
+            this._MenuButtons.style.right = 'auto';
+            if (this._MenuButton && this._fTelnetContainer) {
+                var btnRect = this._MenuButton.getBoundingClientRect();
+                var containerRect = this._fTelnetContainer.getBoundingClientRect();
+                var targetLeft = Math.max(0, Math.min(btnRect.left - containerRect.left, this._fTelnetContainer.clientWidth - this._MenuButtons.clientWidth));
+                var targetTop = Math.max(0, (btnRect.top - containerRect.top) - this._MenuButtons.clientHeight);
+                this._MenuButtons.style.left = targetLeft + 'px';
+                this._MenuButtons.style.top = targetTop + 'px';
+            }
         }
     }
 

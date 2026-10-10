@@ -2254,8 +2254,10 @@ var Crt = (function () {
     };
     Crt.prototype.MousePositionToScreenPosition = function (x, y) {
         var rect = this._Canvas.getBoundingClientRect();
-        x *= this._Canvas.width / rect.width;
-        y *= this._Canvas.height / rect.height;
+        var displayWidth = this._Canvas.clientWidth || rect.width;
+        var displayHeight = this._Canvas.clientHeight || rect.height;
+        x *= this._Canvas.width / (displayWidth || 1);
+        y *= this._Canvas.height / (displayHeight || 1);
         if (this._UseModernScrollback) {
             y -= this._ScrollbackSize * this._Font.Height;
         }
@@ -9184,8 +9186,10 @@ var RIP = (function () {
     RIP.prototype.OnGraphCanvasMouseDown = function (me) {
         var _this = this;
         var rect = this._Graph.Canvas.getBoundingClientRect();
-        var scaleX = (rect.width > 0) ? (this._Graph.Canvas.width / rect.width) : 1;
-        var scaleY = (rect.height > 0) ? (this._Graph.Canvas.height / rect.height) : 1;
+        var displayWidth = this._Graph.Canvas.clientWidth || rect.width;
+        var displayHeight = this._Graph.Canvas.clientHeight || rect.height;
+        var scaleX = (displayWidth > 0) ? (this._Graph.Canvas.width / displayWidth) : 1;
+        var scaleY = (displayHeight > 0) ? (this._Graph.Canvas.height / displayHeight) : 1;
         var clickX = me.offsetX * scaleX;
         var clickY = me.offsetY * scaleY;
         for (var i = this._MouseFields.length - 1; i >= 0; i--) {
@@ -10648,6 +10652,7 @@ var fTelnetClient = (function () {
         var _this = this;
         this.ondata = new TypedEvent();
         this._HasFocus = true;
+        this._IsFullScreen = false;
         this._LastTimer = 0;
         this._LoadingProxySettings = 0;
         this._UseModernScrollback = false;
@@ -10705,6 +10710,7 @@ var fTelnetClient = (function () {
             }
             else {
                 this._fTelnetContainer = Container;
+                this._fTelnetContainer.classList.add('fTelnetContainer');
             }
         }
         else {
@@ -10960,6 +10966,7 @@ var fTelnetClient = (function () {
             MenuButtonsRow4bCell1.appendChild(MenuButtonsFullScreen);
             MenuButtonsRow4b.appendChild(MenuButtonsRow4bCell1);
             MenuButtonsTable.appendChild(MenuButtonsRow4b);
+            this._MenuButtonsFullScreen = MenuButtonsFullScreen;
         }
         if (!this._UseModernScrollback) {
             var MenuButtonsRow5 = document.createElement('tr');
@@ -11015,8 +11022,30 @@ var fTelnetClient = (function () {
         MenuButtonsTable.appendChild(MenuButtonsRow6);
         this._MenuButtons.appendChild(MenuButtonsTable);
         this._MenuButtons.style.display = 'none';
-        this._MenuButtons.style.zIndex = '1500';
-        document.body.appendChild(this._MenuButtons);
+        this._MenuButtons.style.zIndex = '100001';
+        this._fTelnetContainer.appendChild(this._MenuButtons);
+        this._HamburgerButton = document.createElement('button');
+        this._HamburgerButton.className = 'fTelnetHamburgerButton';
+        this._HamburgerButton.setAttribute('aria-label', 'Menu');
+        this._HamburgerButton.innerHTML = '<svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><rect y="3" width="20" height="2.5" rx="1.25"/><rect y="8.75" width="20" height="2.5" rx="1.25"/><rect y="14.5" width="20" height="2.5" rx="1.25"/></svg>';
+        this._HamburgerButton.addEventListener('click', function (e) {
+            _this.OnHamburgerButtonClick(e);
+        }, false);
+        this._HamburgerButton.addEventListener('touchend', function (e) {
+            e.preventDefault();
+            _this.OnHamburgerButtonClick(e);
+        }, false);
+        this._fTelnetContainer.appendChild(this._HamburgerButton);
+        document.addEventListener('click', function (e) {
+            if (_this._MenuButtons && _this._MenuButtons.style.display !== 'none') {
+                var target = e.target;
+                if (!_this._MenuButtons.contains(target) && (!_this._MenuButton || !_this._MenuButton.contains(target)) && (!_this._HamburgerButton || !_this._HamburgerButton.contains(target))) {
+                    _this._MenuButtons.style.display = 'none';
+                }
+            }
+        }, false);
+        document.addEventListener('fullscreenchange', function () { _this.OnNativeFullScreenChange(); }, false);
+        document.addEventListener('webkitfullscreenchange', function () { _this.OnNativeFullScreenChange(); }, false);
         this._VirtualKeyboard = new VirtualKeyboard(this._Crt, this._fTelnetContainer);
         this._VirtualKeyboard.VibrateDurationInMilliseconds = this._Options.VirtualKeyboardVibrateDuration;
         this._VirtualKeyboard.Visible = this._Options.VirtualKeyboardVisible;
@@ -11026,7 +11055,10 @@ var fTelnetClient = (function () {
         });
         this.OnCrtScreenSizeChanged();
         window.addEventListener('resize', function () { _this.OnWindowResize(); }, false);
-        window.addEventListener('orientationchange', function () { _this.OnWindowResize(); }, false);
+        window.addEventListener('orientationchange', function () {
+            _this.OnWindowResize();
+            setTimeout(function () { _this.OnWindowResize(); }, 150);
+        }, false);
         if (this._Options.Emulation === 'Atari') {
             if (this._Options.SplashScreen === '') {
                 this._Crt.Write(atob('m2ZUZWxuZXQgLS0gVGVsbmV0IGZvciB0aGUgV2VimyAgV2ViIGJhc2VkIEJCUyB0ZXJtaW5hbCBjbGllbnSbm0NvcHlyaWdodCAoYykgMjAwOS0'));
@@ -11243,44 +11275,183 @@ var fTelnetClient = (function () {
             }
         }
     };
+    Object.defineProperty(fTelnetClient.prototype, "FullScreen", {
+        get: function () {
+            return this._IsFullScreen;
+        },
+        enumerable: true,
+        configurable: true
+    });
     fTelnetClient.prototype.FullScreenToggle = function (fullscreen) {
         if (fullscreen === void 0) { fullscreen = null; }
         if (typeof this._MenuButtons !== 'undefined') {
             this._MenuButtons.style.display = 'none';
         }
-        if (!document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-            if (fullscreen === false) {
-                return;
+        var targetState = (fullscreen === null) ? !this._IsFullScreen : !!fullscreen;
+        if (targetState === this._IsFullScreen) {
+            return;
+        }
+        this._IsFullScreen = targetState;
+        if (this._IsFullScreen) {
+            try {
+                if (this._fTelnetContainer.requestFullscreen) {
+                    var p = this._fTelnetContainer.requestFullscreen();
+                    if (p && p.catch) {
+                        p.catch(function () { });
+                    }
+                }
+                else if (this._fTelnetContainer.webkitRequestFullscreen) {
+                    this._fTelnetContainer.webkitRequestFullscreen();
+                }
+                else if (this._fTelnetContainer.mozRequestFullScreen) {
+                    this._fTelnetContainer.mozRequestFullScreen();
+                }
+                else if (this._fTelnetContainer.msRequestFullscreen) {
+                    this._fTelnetContainer.msRequestFullscreen();
+                }
             }
-            if (this._fTelnetContainer.requestFullscreen) {
-                this._fTelnetContainer.requestFullscreen();
+            catch (e) { }
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    var pLock = screen.orientation.lock('landscape');
+                    if (pLock && pLock.catch) {
+                        pLock.catch(function () { });
+                    }
+                }
             }
-            else if (this._fTelnetContainer.msRequestFullscreen) {
-                this._fTelnetContainer.msRequestFullscreen();
+            catch (e) { }
+            this._fTelnetContainer.classList.add('fTelnetFullScreen');
+            if (this._MenuButtonsFullScreen) {
+                this._MenuButtonsFullScreen.innerHTML = 'Exit&nbsp;Full&nbsp;Screen';
             }
-            else if (this._fTelnetContainer.mozRequestFullScreen) {
-                this._fTelnetContainer.mozRequestFullScreen();
+            try {
+                document.body.style.overflow = 'hidden';
             }
-            else if (this._fTelnetContainer.webkitRequestFullscreen) {
-                this._fTelnetContainer.webkitRequestFullscreen();
+            catch (e) { }
+            this.UpdateFullScreenLayout();
+        }
+        else {
+            try {
+                if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                    if (document.exitFullscreen) {
+                        var pExit = document.exitFullscreen();
+                        if (pExit && pExit.catch) {
+                            pExit.catch(function () { });
+                        }
+                    }
+                    else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    }
+                    else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    }
+                    else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+            }
+            catch (e) { }
+            try {
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            }
+            catch (e) { }
+            this._fTelnetContainer.classList.remove('fTelnetFullScreen');
+            this._fTelnetContainer.classList.remove('fTelnetLandscapeRotated');
+            if (this._MenuButtonsFullScreen) {
+                this._MenuButtonsFullScreen.innerHTML = 'Full&nbsp;Screen';
+            }
+            try {
+                document.body.style.overflow = '';
+            }
+            catch (e) { }
+            this.OnCrtScreenSizeChanged();
+        }
+    };
+    fTelnetClient.prototype.OnNativeFullScreenChange = function () {
+        var isNativeFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (!isNativeFs && this._IsFullScreen && !DetectMobileBrowser.IsMobile) {
+            this.FullScreenToggle(false);
+        }
+    };
+    fTelnetClient.prototype.UpdateFullScreenLayout = function () {
+        if (!this._IsFullScreen || !this._fTelnetContainer) {
+            return;
+        }
+        var winW = window.innerWidth || document.documentElement.clientWidth;
+        var winH = window.innerHeight || document.documentElement.clientHeight;
+        var isPortrait = winW < winH;
+        var shouldRotate = DetectMobileBrowser.IsMobile && isPortrait;
+        if (shouldRotate) {
+            this._fTelnetContainer.classList.add('fTelnetLandscapeRotated');
+        }
+        else {
+            this._fTelnetContainer.classList.remove('fTelnetLandscapeRotated');
+        }
+        var visualAvailableWidth = shouldRotate ? winH : winW;
+        var visualAvailableHeight = shouldRotate ? winW : winH;
+        var nativeWidth;
+        var nativeHeight;
+        if (this._Options.Emulation === 'RIP') {
+            nativeWidth = 640;
+            nativeHeight = 350;
+        }
+        else {
+            nativeHeight = this._Crt.ScreenRows * this._Crt.Font.Height;
+            nativeWidth = this._Crt.ScreenCols * this._Crt.Font.Width;
+        }
+        var scale = Math.min(visualAvailableWidth / nativeWidth, visualAvailableHeight / nativeHeight);
+        var displayWidth = Math.floor(nativeWidth * scale);
+        var displayHeight = Math.floor(nativeHeight * scale);
+        if (this._Options.Emulation === 'RIP') {
+            this._ClientContainer.style.width = displayWidth + 'px';
+            this._ClientContainer.style.height = displayHeight + 'px';
+            if (this._Crt && this._Crt.Canvas) {
+                this._Crt.Canvas.style.width = displayWidth + 'px';
+                this._Crt.Canvas.style.height = displayHeight + 'px';
+            }
+            var GraphCanvas = document.getElementById('fTelnetGraphCanvas');
+            if (GraphCanvas) {
+                GraphCanvas.style.width = displayWidth + 'px';
+                GraphCanvas.style.height = displayHeight + 'px';
             }
         }
         else {
-            if (fullscreen === true) {
-                return;
+            this._ClientContainer.style.width = displayWidth + 'px';
+            this._ClientContainer.style.height = displayHeight + 'px';
+            if (this._Crt && this._Crt.Canvas) {
+                this._Crt.Canvas.style.width = displayWidth + 'px';
+                this._Crt.Canvas.style.height = displayHeight + 'px';
             }
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            }
-            else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-            else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            }
-            else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
+        }
+        if (typeof this._FocusWarningBar !== 'undefined') {
+            this._FocusWarningBar.style.width = Math.max(0, displayWidth - 10) + 'px';
+        }
+        if (typeof this._ScrollbackBar !== 'undefined') {
+            this._ScrollbackBar.style.width = Math.max(0, displayWidth - 10) + 'px';
+        }
+        if (typeof this._MobileKeyboard !== 'undefined') {
+            this._MobileKeyboard.SetWidth(displayWidth);
+        }
+    };
+    fTelnetClient.prototype.OnHamburgerButtonClick = function (e) {
+        if (e && e.stopPropagation) {
+            e.stopPropagation();
+        }
+        if (typeof this._MenuButtons === 'undefined') {
+            return;
+        }
+        var isVisible = this._MenuButtons.style.display !== 'none' && this._MenuButtons.style.display !== '';
+        if (isVisible) {
+            this._MenuButtons.style.display = 'none';
+        }
+        else {
+            this._MenuButtons.style.display = 'block';
+            this._MenuButtons.style.right = '10px';
+            this._MenuButtons.style.left = 'auto';
+            var topOffset = (this._HamburgerButton ? this._HamburgerButton.offsetTop + this._HamburgerButton.offsetHeight + 6 : 56);
+            this._MenuButtons.style.top = topOffset + 'px';
         }
     };
     fTelnetClient.prototype.LoadProxySettings = function () {
@@ -11529,7 +11700,12 @@ var fTelnetClient = (function () {
         }
     };
     fTelnetClient.prototype.OnWindowResize = function () {
-        this.OnCrtScreenSizeChanged();
+        if (this._IsFullScreen) {
+            this.UpdateFullScreenLayout();
+        }
+        else {
+            this.OnCrtScreenSizeChanged();
+        }
     };
     fTelnetClient.prototype.OnCrtScreenSizeChanged = function () {
         var NewWidth;
@@ -11641,11 +11817,16 @@ var fTelnetClient = (function () {
     };
     fTelnetClient.prototype.OnMenuButtonClick = function (e) {
         this._MenuButtons.style.display = (this._MenuButtons.style.display === 'none') ? 'block' : 'none';
-        if (e !== null) {
-            var maxLeft = (window.innerWidth || document.documentElement.clientWidth) - this._MenuButtons.clientWidth - 10;
-            var targetLeft = Math.max(0, Math.min(e.pageX, maxLeft));
-            this._MenuButtons.style.left = targetLeft + 'px';
-            this._MenuButtons.style.top = (e.pageY - this._MenuButtons.clientHeight) + 'px';
+        if (e !== null && this._MenuButtons.style.display === 'block') {
+            this._MenuButtons.style.right = 'auto';
+            if (this._MenuButton && this._fTelnetContainer) {
+                var btnRect = this._MenuButton.getBoundingClientRect();
+                var containerRect = this._fTelnetContainer.getBoundingClientRect();
+                var targetLeft = Math.max(0, Math.min(btnRect.left - containerRect.left, this._fTelnetContainer.clientWidth - this._MenuButtons.clientWidth));
+                var targetTop = Math.max(0, (btnRect.top - containerRect.top) - this._MenuButtons.clientHeight);
+                this._MenuButtons.style.left = targetLeft + 'px';
+                this._MenuButtons.style.top = targetTop + 'px';
+            }
         }
     };
     fTelnetClient.prototype.OnTimer = function () {

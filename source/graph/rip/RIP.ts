@@ -1051,8 +1051,10 @@ class RIP {
     // Can't use this since it isn't referring to RIP (no fat arrow used to call)
     private OnGraphCanvasMouseDown(me: MouseEvent): void {
         var rect = this._Graph.Canvas.getBoundingClientRect();
-        var scaleX = (rect.width > 0) ? (this._Graph.Canvas.width / rect.width) : 1;
-        var scaleY = (rect.height > 0) ? (this._Graph.Canvas.height / rect.height) : 1;
+        var displayWidth = this._Graph.Canvas.clientWidth || rect.width;
+        var displayHeight = this._Graph.Canvas.clientHeight || rect.height;
+        var scaleX = (displayWidth > 0) ? (this._Graph.Canvas.width / displayWidth) : 1;
+        var scaleY = (displayHeight > 0) ? (this._Graph.Canvas.height / displayHeight) : 1;
         var clickX = me.offsetX * scaleX;
         var clickY = me.offsetY * scaleY;
 
